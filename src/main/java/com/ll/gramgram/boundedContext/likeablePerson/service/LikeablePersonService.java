@@ -33,6 +33,10 @@ public class LikeablePersonService {
         InstaMember fromInstaMember = member.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
 
+        if (likeablePersonRepository.countByFromInstaMemberId(fromInstaMember.getId()) >= 10) {
+            return RsData.of("F-4","호감 상대는 10명까지만 등록 가능합니다.");
+        }
+
         int instaMemberTypeCode = getAttractiveTypeCode(fromInstaMember, toInstaMember);
         if (attractiveTypeCode == instaMemberTypeCode) {
             return RsData.of("F-3", "같은 사유의 호감이 이미 존재합니다.");
