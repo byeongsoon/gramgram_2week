@@ -33,13 +33,20 @@ public class LikeablePersonService {
         InstaMember fromInstaMember = member.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
 
-        if (likeablePersonRepository.countByFromInstaMemberId(fromInstaMember.getId()) >= 10) {
-            return RsData.of("F-4","호감 상대는 10명까지만 등록 가능합니다.");
+        LikeablePerson findLikeablePerson = getLikeablePersonByInstaMember(fromInstaMember, toInstaMember)
+            .orElse(null);
+
+        if (findLikeablePerson != null) {
+            if (attractiveTypeCode == findLikeablePerson.getAttractiveTypeCode()) {
+                return RsData.of("F-3", "같은 사유의 호감이 이미 존재합니다.");
+            }
+
+            findLikeablePerson.updateAttractiveTypeCode(attractiveTypeCode);
+            return RsData.of("S-2", "기존의 호감 타입을 입력하신 호감타입으로 수정되었습니다.", findLikeablePerson);
         }
 
-        int instaMemberTypeCode = getAttractiveTypeCode(fromInstaMember, toInstaMember);
-        if (attractiveTypeCode == instaMemberTypeCode) {
-            return RsData.of("F-3", "같은 사유의 호감이 이미 존재합니다.");
+        if (likeablePersonRepository.countByFromInstaMemberId(fromInstaMember.getId()) >= 10) {
+            return RsData.of("F-4","호감 상대는 10명까지만 등록 가능합니다.");
         }
 
         LikeablePerson likeablePerson = LikeablePerson
@@ -62,13 +69,9 @@ public class LikeablePersonService {
         return RsData.of("S-1", "입력하신 인스타유저(%s)를 호감상대로 등록되었습니다.".formatted(username), likeablePerson);
     }
 
-    private int getAttractiveTypeCode(InstaMember fromMember, InstaMember toInstaMember) {
-        Optional<LikeablePerson> fromLikePerson = likeablePersonRepository
+    private Optional<LikeablePerson> getLikeablePersonByInstaMember(InstaMember fromMember, InstaMember toInstaMember) {
+        return likeablePersonRepository
                 .findByFromInstaMemberIdAndToInstaMemberId(fromMember.getId(), toInstaMember.getId());
-
-        return fromLikePerson
-            .map(LikeablePerson::getAttractiveTypeCode)
-            .orElse(0);
     }
 
     public List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId) {
