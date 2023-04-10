@@ -26,19 +26,19 @@ public class LikeablePersonService {
             return RsData.of("F-2", "먼저 본인의 인스타그램 아이디를 입력해야 합니다.");
         }
 
-        if (member.getInstaMember().getUsername().equals(username)) {
+        InstaMember fromInstaMember = member.getInstaMember();
+
+        if (fromInstaMember.getUsername().equals(username)) {
             return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
         }
 
-        InstaMember fromInstaMember = member.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
-
         LikeablePerson findLikeablePerson = getLikeablePersonByInstaMember(fromInstaMember, toInstaMember)
             .orElse(null);
 
         if (findLikeablePerson != null) {
             if (attractiveTypeCode == findLikeablePerson.getAttractiveTypeCode()) {
-                return RsData.of("F-3", "같은 사유의 호감이 이미 존재합니다.");
+                return RsData.of("F-3", "같은 타입의 호감이 이미 존재합니다.");
             }
 
             findLikeablePerson.updateAttractiveTypeCode(attractiveTypeCode);
