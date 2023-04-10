@@ -22,7 +22,7 @@ public class LikeablePersonService {
 
     @Transactional
     public RsData<LikeablePerson> like(Member member, String username, int attractiveTypeCode) {
-        if (member.hasConnectedInstaMember() == false) {
+        if (!member.hasConnectedInstaMember()) {
             return RsData.of("F-2", "먼저 본인의 인스타그램 아이디를 입력해야 합니다.");
         }
 
@@ -32,6 +32,11 @@ public class LikeablePersonService {
 
         InstaMember fromInstaMember = member.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
+
+        int instaMemberTypeCode = getAttractiveTypeCode(fromInstaMember, toInstaMember);
+        if (attractiveTypeCode == instaMemberTypeCode) {
+            return RsData.of("F-3", "같은 사유의 호감이 이미 존재합니다.");
+        }
 
         LikeablePerson likeablePerson = LikeablePerson
                 .builder()
@@ -53,6 +58,15 @@ public class LikeablePersonService {
         return RsData.of("S-1", "입력하신 인스타유저(%s)를 호감상대로 등록되었습니다.".formatted(username), likeablePerson);
     }
 
+    private int getAttractiveTypeCode(InstaMember fromMember, InstaMember toInstaMember) {
+        Optional<LikeablePerson> fromLikePerson = likeablePersonRepository
+                .findByFromInstaMemberIdAndToInstaMemberId(fromMember.getId(), toInstaMember.getId());
+
+        return fromLikePerson
+            .map(LikeablePerson::getAttractiveTypeCode)
+            .orElse(0);
+    }
+
     public List<LikeablePerson> findByFromInstaMemberId(Long fromInstaMemberId) {
         return likeablePersonRepository.findByFromInstaMemberId(fromInstaMemberId);
     }
@@ -70,15 +84,18 @@ public class LikeablePersonService {
     }
 
     public RsData canActorDelete(Member actor, LikeablePerson likeablePerson) {
-        if (likeablePerson == null) return RsData.of("F-1", "이미 삭제되었습니다.");
+        if (likeablePerson == null) {
+            return RsData.of("F-1", "이미 삭제되었습니다.");
+        }
 
         // 수행자의 인스타계정 번호
         long actorInstaMemberId = actor.getInstaMember().getId();
         // 삭제 대상의 작성자(호감표시한 사람)의 인스타계정 번호
         long fromInstaMemberId = likeablePerson.getFromInstaMember().getId();
 
-        if (actorInstaMemberId != fromInstaMemberId)
+        if (actorInstaMemberId != fromInstaMemberId) {
             return RsData.of("F-2", "권한이 없습니다.");
+        }
 
         return RsData.of("S-1", "삭제가능합니다.");
     }
