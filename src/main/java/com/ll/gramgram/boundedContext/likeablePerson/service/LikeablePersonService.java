@@ -45,7 +45,7 @@ public class LikeablePersonService {
             return RsData.of("S-2", "기존의 호감 타입을 입력하신 호감타입으로 수정되었습니다.", findLikeablePerson);
         }
 
-        if (likeablePersonRepository.countByFromInstaMemberId(fromInstaMember.getId()) >= 10) {
+        if (fromInstaMember.getFromLikeablePeople().size() >= 10) {
             return RsData.of("F-4","호감 상대는 10명까지만 등록 가능합니다.");
         }
 
