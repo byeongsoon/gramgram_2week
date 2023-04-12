@@ -29,15 +29,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        String oauthId;
+        String oauthId = oAuth2User.getName();
 
         String providerTypeCode = userRequest.getClientRegistration().getRegistrationId().toUpperCase();
 
         if ("NAVER".equals(providerTypeCode)) {
             Map<String, Object> response = (Map<String, Object>) oAuth2User.getAttributes().get("response");
             oauthId = (String) response.get("id");
-        } else {
-            oauthId = oAuth2User.getName();
         }
 
         String username = providerTypeCode + "__%s".formatted(oauthId);
